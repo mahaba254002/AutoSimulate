@@ -1,0 +1,41 @@
+# Secrets & Credentials
+.env
+*.env
+*.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+
+# Local data / caches / logs
+data/
+*.parquet
+*.log
+
+# Node
+node_modules/
+dashboard/node_modules/
+dashboard/build/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

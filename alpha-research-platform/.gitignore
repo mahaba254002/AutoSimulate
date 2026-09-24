@@ -1,0 +1,19 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# local data / caches
+data/
+*.parquet
+
+# node
+dashboard/node_modules/
+dashboard/build/
+
+# os
+.DS_Store
