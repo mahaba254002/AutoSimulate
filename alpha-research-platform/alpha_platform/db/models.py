@@ -8,10 +8,10 @@ import uuid
 
 from sqlalchemy import (
     Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey,
-    Integer, Numeric, SmallInteger, String, Text, UniqueConstraint, func,
+    Integer, Numeric, SmallInteger, String, Text, UniqueConstraint, func, Index, text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, deferred
 
 Base = declarative_base()
 
@@ -42,6 +42,8 @@ class AlphaConfig(Base):
     selection_limit = Column(Text)
     language = Column(Text, nullable=False, default="FASTEXPR")
     visualization = Column(Boolean, default=False)
+    max_trade = Column(Text)
+    simulation_mode = Column(Text)
 
     origin = Column(Text, nullable=False)
     parent_config_id = Column(UUID(as_uuid=True), ForeignKey("alpha_config.config_id"))
@@ -105,6 +107,10 @@ class SimulationRun(Base):
     ratelimit_limit = Column(Integer)
     ratelimit_remaining = Column(Integer)
     ratelimit_reset_seconds = Column(Integer)
+    ratelimit_limit_second = Column(Integer)
+    ratelimit_remaining_second = Column(Integer)
+    ratelimit_limit_minute = Column(Integer)
+    ratelimit_remaining_minute = Column(Integer)
 
     submitted_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     completed_at = Column(DateTime(timezone=True))
@@ -112,6 +118,8 @@ class SimulationRun(Base):
     triggered_by = Column(Text, nullable=False)
 
     __table_args__ = (
+        Index("uq_simrun_config_per_day", "config_id", func.immutable_date_utc(submitted_at),
+              unique=True, postgresql_where=text("status NOT IN ('ERROR','FAIL','CANCELLED')")),
         CheckConstraint(
             "status IN ('WAITING','SIMULATING','CANCELLED','COMPLETE','WARNING','ERROR','TIMEOUT','FAIL')",
             name="ck_simrun_status",
@@ -272,3 +280,131 @@ class QuotaLedger(Base):
     simulations_used = Column(Integer, nullable=False, default=0)
     last_known_remaining = Column(Integer)
     last_updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class QuotaWindowMinute(Base):
+    __tablename__ = "quota_window_minute"
+
+    window_start = Column(DateTime(timezone=True), primary_key=True)
+    limit_per_minute = Column(Integer, nullable=False)
+    simulations_used = Column(Integer, nullable=False, default=0)
+    last_known_remaining = Column(Integer)
+    last_updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class CatalogScope(Base):
+    """One complete account-visible catalogue for a settings combination."""
+    __tablename__ = "catalog_scope"
+    scope_id = Column(Text, primary_key=True)
+    settings = Column(JSONB, nullable=False)
+    # Legacy snapshots remain for compatibility; queries no longer load them.
+    legacy_datasets = deferred(Column("datasets", JSONB, nullable=False, default=list))
+    legacy_fields = deferred(Column("fields", JSONB, nullable=False, default=list))
+    _dataset_rows = relationship("ScopedDataset", cascade="all, delete-orphan", lazy="select", order_by="ScopedDataset.dataset_id")
+    _field_rows = relationship("ScopedField", cascade="all, delete-orphan", lazy="select", order_by="ScopedField.field_id")
+    capabilities = Column(JSONB, nullable=False, default=dict)
+    status = Column(Text, nullable=False, default="QUEUED")
+    error = Column(Text)
+    synced_at = Column(DateTime(timezone=True))
+
+    @property
+    def datasets(self):
+        return [row.payload for row in self._dataset_rows]
+
+    @datasets.setter
+    def datasets(self, values):
+        from alpha_platform.research.catalog_store import dataset_record, field_record
+        self._dataset_rows = [ScopedDataset(**dataset_record(p)) for p in {v['id']:v for v in values}.values()]
+        if '_field_rows' in self.__dict__:
+            metadata = {p['id']:p for p in values}
+            for row in self._field_rows:
+                for key, value in field_record(row.payload, metadata).items():
+                    setattr(row, key, value)
+
+    @property
+    def fields(self):
+        return [row.payload for row in self._field_rows]
+
+    @fields.setter
+    def fields(self, values):
+        from alpha_platform.research.catalog_store import field_record
+        metadata = {p['id']:p for p in self.datasets}
+        self._field_rows = [ScopedField(**field_record(p, metadata)) for p in {v['id']:v for v in values}.values()]
+
+
+class ScopedDataset(Base):
+    __tablename__ = "catalog_dataset"
+    scope_id = Column(Text, ForeignKey("catalog_scope.scope_id", ondelete="CASCADE"), primary_key=True)
+    dataset_id = Column(Text, primary_key=True)
+    name = Column(Text, nullable=False)
+    category_id = Column(Text)
+    category_name = Column(Text)
+    instrument_coverage = Column(Numeric(8,4))
+    date_coverage = Column(Numeric(8,4))
+    search_text = Column(Text, nullable=False)
+    payload = Column(JSONB, nullable=False)
+    __table_args__ = (Index("ix_catalog_dataset_category", "scope_id", "category_id"),)
+
+
+class ScopedField(Base):
+    __tablename__ = "catalog_field"
+    scope_id = Column(Text, ForeignKey("catalog_scope.scope_id", ondelete="CASCADE"), primary_key=True)
+    field_id = Column(Text, primary_key=True)
+    dataset_id = Column(Text)
+    dataset_name = Column(Text)
+    category_id = Column(Text)
+    category_name = Column(Text)
+    field_type = Column(Text)
+    instrument_coverage = Column(Numeric(8,4))
+    date_coverage = Column(Numeric(8,4))
+    search_text = Column(Text, nullable=False)
+    payload = Column(JSONB, nullable=False)
+    __table_args__ = (Index("ix_catalog_field_dataset_coverage", "scope_id", "dataset_id", "instrument_coverage", "date_coverage"),
+                     Index("ix_catalog_field_category", "scope_id", "category_id"),)
+
+
+class ResearchCampaign(Base):
+    __tablename__ = "research_campaign"
+    campaign_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(Text, nullable=False)
+    objective = Column(Text, nullable=False)
+    mode = Column(Text, nullable=False)
+    category = Column(Text, nullable=False)
+    source_expression = Column(Text)
+    max_attempts = Column(Integer, nullable=False)
+    concurrency = Column(Integer, nullable=False)
+    criteria = Column(JSONB, nullable=False)
+    provider = Column(Text, nullable=False)
+    model = Column(Text, nullable=False)
+    status = Column(Text, nullable=False, default="DRAFT")
+    brief = Column(JSONB)
+    error = Column(Text)
+    stop_requested = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class ResearchCandidate(Base):
+    __tablename__ = "research_candidate"
+    candidate_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    campaign_id = Column(UUID(as_uuid=True), ForeignKey("research_campaign.campaign_id"), nullable=False, index=True)
+    config_id = Column(UUID(as_uuid=True), ForeignKey("alpha_config.config_id"))
+    run_id = Column(UUID(as_uuid=True), ForeignKey("simulation_run.run_id"))
+    ordinal = Column(Integer, nullable=False)
+    expression = Column(Text, nullable=False)
+    template = Column(Text, nullable=False)
+    rationale = Column(Text, nullable=False)
+    payload = Column(JSONB, nullable=False)
+    status = Column(Text, nullable=False, default="PLANNED")
+    evaluation = Column(JSONB)
+    telemetry = Column(JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb"))
+    decision = Column(Text)
+    feedback = Column(Text)
+    decided_at = Column(DateTime(timezone=True))
+    __table_args__ = (UniqueConstraint("campaign_id", "ordinal", name="uq_campaign_ordinal"),)
+
+
+class WorkspacePreference(Base):
+    __tablename__ = "workspace_preference"
+    key = Column(Text, primary_key=True)
+    value = Column(JSONB, nullable=False)

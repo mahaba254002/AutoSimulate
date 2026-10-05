@@ -1,0 +1,13 @@
+:root {
+ --color-ink:#1a2332;
+ --color-ink-soft:#4a5568;
+ --color-paper:#faf9f6;
+ --color-canvas:#f0eee7;
+ --color-accent:#2d5f4c;
+ --color-accent-hover:#234a3c;
+ --color-accent-warm:#b8863e;
+ --color-line:#d8d4c8;
+ --color-white:#ffffff;
+ --font-display:"Source Serif 4",Georgia,serif;
+ --font-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}

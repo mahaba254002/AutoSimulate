@@ -1,19 +1,52 @@
 # secrets
 .env
+.env.*
+!.env.example
+secrets/
+credentials/
+*session_cookies*
+platform-brain.json
+*.pem
+*.key
 
 # python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
 
 # local data / caches
 data/
 *.parquet
+*.log
+*.sqlite*
+*.db
+*.dump
+*.sql.gz
+backups/
+exports/
+private/
+docs/repository/
+mlruns/
+mlartifacts/
+.ipynb_checkpoints/
 
 # node
 dashboard/node_modules/
 dashboard/build/
+node_modules/
+playwright-report/
+test-results/
 
 # os
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/

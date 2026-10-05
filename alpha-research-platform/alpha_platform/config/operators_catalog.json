@@ -1,0 +1,347 @@
+{
+  "operators": {
+    "Arithmetic": {
+      "abs(x)": {
+        "description": "Returns the absolute value of a number, removing any negative sign.",
+        "example": "abs(close - open)"
+      },
+      "add(x, y, filter = false), x + y": {
+        "description": "Adds two or more inputs element wise. Set filter=true to treat NaNs as 0 before summing.",
+        "example": "add(x, y)"
+      },
+      "densify(x)": {
+        "description": "Converts a grouping field of many buckets into lesser number of only available buckets so as to make working with grouping fields computationally efficient",
+        "example": null
+      },
+      "divide(x, y), x / y": {
+        "description": "Returns x divided by y (x / y). Note: dividing by zero raises an error; to avoid it, use divide(x, add(y, 0.0001)); adding a small epsilon to the denominator prevents divide-by-zero errors.",
+        "example": null
+      },
+      "inverse(x)": {
+        "description": "Returns the reciprocal of x (1 / x). Note: errors when x = 0; to avoid it, use inverse(add(x, 0.0001)); adding a small epsilon prevents divide-by-zero errors.",
+        "example": null
+      },
+      "log(x)": {
+        "description": "Calculates the natural logarithm of the input value. Commonly used to transform data that has positive values.",
+        "example": "log(10)"
+      },
+      "max(x, y, ..)": {
+        "description": "Maximum value of all inputs. At least 2 inputs are required",
+        "example": "max(close, vwap)"
+      },
+      "min(x, y ..)": {
+        "description": "Minimum value of all inputs. At least 2 inputs are required",
+        "example": "min(close, vwap)"
+      },
+      "multiply(x ,y, ... , filter=false), x * y": {
+        "description": "Multiplies two or more inputs element wise. Set filter=true to treat NaNs as 1 before multiplication",
+        "example": "multiply(rank(-returns), rank(volume/adv20), filter=true)"
+      },
+      "power(x, y)": {
+        "description": "Returns x raised to the power of y (x ^ y). Note: power(x, y) can drop the sign of x when y is non-integer; use signed_power(x, y) to preserve the sign of x.",
+        "example": "power(returns, volume/adv20)"
+      },
+      "reverse(x)": {
+        "description": "- x",
+        "example": null
+      },
+      "sign(x)": {
+        "description": "Returns the sign of a number: +1 for positive, -1 for negative, and 0 for zero. If the input is NaN, returns NaN.",
+        "example": "sign(close - open)"
+      },
+      "signed_power(x, y)": {
+        "description": "x raised to the power of y such that final result preserves sign of x",
+        "example": "signed_power(3, 2)"
+      },
+      "sqrt(x)": {
+        "description": "Returns the non-negative square root of x. Equivalent to power(x, 0.5).",
+        "example": "sqrt(9)"
+      },
+      "subtract(x, y, filter=false), x - y": {
+        "description": "Subtracts inputs left to right: x ? y ? … Supports two or more inputs. Set filter=true to treat NaNs as 0 before subtraction.",
+        "example": "subtract(10, 3)"
+      },
+      "to_nan(x, value=0, reverse=false)": {
+        "description": "Convert value to NaN or NaN to value if reverse=true",
+        "example": null
+      }
+    },
+    "Logical": {
+      "and(input1, input2)": {
+        "description": "Returns 1 ('true') if both inputs are 1 ('true'). Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "if_else(input1, input2, input 3)": {
+        "description": "The if_else operator returns one of two values based on a condition. If the condition is true, it returns the first value; if false, it returns the second value.",
+        "example": "if_else(event, alpha_1, alpha_2)"
+      },
+      "input1 < input2": {
+        "description": "Returns 1 ('true') if input1 is a smaller than input2. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "input1 <= input2": {
+        "description": "Returns 1 ('true') if input1 is a smaller or the same as input2. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "input1 == input2": {
+        "description": "Returns 1 ('true') if input1 and input2 are the same. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "input1 > input2": {
+        "description": "Returns 1 ('true') if input1 is a larger than input2. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "input1 >= input2": {
+        "description": "Returns 1 ('true') if input1 is a larger or the same as input2. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "input1!= input2": {
+        "description": "Returns 1 ('true') if input1 and input2 are different numbers. Otherwise, returns 0 ('false').",
+        "example": null
+      },
+      "is_nan(input)": {
+        "description": "If (input == NaN) return 1 else return 0",
+        "example": "if_else(is_nan(rank(sales)), 0.5, rank(sales))"
+      },
+      "not(x)": {
+        "description": "Returns the logical negation of x. Returns 0 when x is 1 (‘true’) and 1 when x is 0 (‘false’).",
+        "example": null
+      },
+      "or(input1, input2)": {
+        "description": "Returns 1 if either input is true (either input1 or input2 has a value of 1), otherwise it returns 0.",
+        "example": null
+      }
+    },
+    "Time Series": {
+      "days_from_last_change(x)": {
+        "description": "Calculates the number of days since the last change in the value of a given variable.",
+        "example": "trade_when(Last_earnings_date == 0, alpha, -1)"
+      },
+      "hump(x, hump = 0.01)": {
+        "description": "Limits amount and magnitude of changes in input (thus reducing turnover)",
+        "example": "hump(-ts_delta(close, 5), hump = 0.00001)"
+      },
+      "jump_decay(x, d, sensitivity=0.5, force=0.1)": {
+        "description": "If there is a huge jump in current data compare to previous one, apply force.",
+        "example": "jump_decay(sales/assets,252,stddev=True,sensitivity=0.5,force=0.1)"
+      },
+      "kth_element(x, d, k, ignore=“NaN”)": {
+        "description": "Returns the K-th value from a time series by looking back over a specified number of (‘d’) days, with the option to ignore certain values.",
+        "example": "kth_element(sales/assets,252,k=\"1\",ignore=\"NAN 0\")"
+      },
+      "last_diff_value(x, d)": {
+        "description": "Returns the most recent value of x from the past d days that is different from the current value of x.",
+        "example": "last_diff_value(eps, 63)"
+      },
+      "ts_arg_max(x, d)": {
+        "description": "Returns the number of days since the maximum value occurred in the last d days of a time series.",
+        "example": "ts_arg_max(close, 10)"
+      },
+      "ts_arg_min(x, d)": {
+        "description": "Returns the number of days since the minimum value occurred in a time series over the past d days.",
+        "example": "ts_arg_min(close, 10)"
+      },
+      "ts_av_diff(x, d)": {
+        "description": "Calculates the difference between a value and its mean over a specified period, ignoring NaN values in the mean calculation.",
+        "example": "ts_av_diff(close, 20)"
+      },
+      "ts_backfill(x,lookback = d, k=1)": {
+        "description": "Replaces missing (NaN) values in a time series with the most recent valid value from a specified lookback window.",
+        "example": "ts_backfill(fnd6_newqv1300_xrdq, 252)"
+      },
+      "ts_corr(x, y, d)": {
+        "description": "Calculates the Pearson correlation between two variables, x and y, over the past d days.",
+        "example": "ts_corr(vwap, close, 20)"
+      },
+      "ts_count_nans(x ,d)": {
+        "description": "Counts the number of missing (NaN) values in a data series over a specified number of days.",
+        "example": "ts_count_nans(volume, 5)"
+      },
+      "ts_covariance(y, x, d)": {
+        "description": "Calculates the covariance between two time-series variables, y and x, over the past d days.",
+        "example": null
+      },
+      "ts_decay_linear(x, d, dense = false)": {
+        "description": "Applies a linear decay to time-series data over a set number of days, smoothing the data by averaging recent values.",
+        "example": "ts_rank(ts_decay_linear(close, 5), 252)"
+      },
+      "ts_delay(x, d)": {
+        "description": "Returns the value of a variable x from d days ago.",
+        "example": "ts_delay(close, 5)"
+      },
+      "ts_delta(x, d)": {
+        "description": "Calculates the difference between a value and its delayed version over a specified period.",
+        "example": "ts_delta(close, 5)"
+      },
+      "ts_max(x, d)": {
+        "description": "Returns max value of x for the past d days",
+        "example": null
+      },
+      "ts_mean(x, d)": {
+        "description": "Calculates the simple average (mean) value of a variable x over the past d days.",
+        "example": "ts_mean(returns, 21)"
+      },
+      "ts_min(x, d)": {
+        "description": "Returns min value of x for the past d days",
+        "example": null
+      },
+      "ts_product(x, d)": {
+        "description": "Returns the product of the values of x over the past d days.",
+        "example": "power(ts_product(returns, 10), 1/10)"
+      },
+      "ts_quantile(x,d, driver=\"gaussian\" )": {
+        "description": "Calculates the ts_rank of the input and transforms it using the inverse cumulative distribution function of a specified probability distribution.",
+        "example": "ts_quantile(anl14_mean_div_fy1/cap, 252, driver=\"gaussian\")"
+      },
+      "ts_rank(x, d, constant = 0)": {
+        "description": "Ranks the value of a variable for each instrument over a specified number of past days, returning the rank of the current value.",
+        "example": "ts_rank(pretax_income, 252)"
+      },
+      "ts_regression(y, x, d, lag = 0, rettype = 0)": {
+        "description": "Fits an OLS linear regression of dependent variable y on independent variable x over d days, using valid (x, y) tuples. lag defaults to 0 and optionally selects lagged regression. rettype selects: 0 = error term (residual, default); 1 = y-intercept (alpha); 2 = slope (beta); 3 = y-estimate; 4 = sum of squares of error (SSE); 5 = sum of squares of total (SST); 6 = R-square; 7 = mean square error (MSE); 8 = standard error of beta; 9 = standard error of alpha. Regressing on ts_step(1) with rettype=2 measures a time trend slope; rettype=0 returns the error term relative to the fitted trend.",
+        "documentation_provenance": "BRAIN operator documentation supplied by the user on 2026-10-03.",
+        "example": "ts_regression(est_netprofit, est_netdebt, 252, lag = 0, rettype = 2)"
+      },
+      "ts_scale(x, d, constant = 0)": {
+        "description": "Scales a time series to a 0–1 range based on its minimum and maximum values over a specified period.",
+        "example": "ts_scale(close, 252, constant=0)"
+      },
+      "ts_std_dev(x, d)": {
+        "description": "Calculates the standard deviation of a data series x over the past d days.",
+        "example": "ts_std_dev(returns, 21)"
+      },
+      "ts_step(1)": {
+        "description": "Returns a counter of days, incrementing by one each day.",
+        "example": "ts_regression(returns, ts_step(1), 60, rettype=0)"
+      },
+      "ts_sum(x, d)": {
+        "description": "Sum values of x for the past d days.",
+        "example": null
+      },
+      "ts_target_tvr_decay(x, lambda_min=0, lambda_max=1, target_tvr=0.1)": {
+        "description": "Tune \"ts_decay\" to have a turnover equal to a certain target.",
+        "example": null
+      },
+      "ts_target_tvr_delta_limit(x, y, lambda_min=0, lambda_max=1, target_tvr=0.1)": {
+        "description": "Tune \"ts_delta_limit\" to have a turnover equal to a certain target.",
+        "example": null
+      },
+      "ts_zscore(x, d)": {
+        "description": "Calculates the Z-score of a time series, showing how far today's value is from the recent average.",
+        "example": "ts_zscore(returns, 63)"
+      }
+    },
+    "Cross Sectional": {
+      "normalize(x, useStd = false, limit = 0.0)": {
+        "description": "Centers a daily cross section by subtracting the market mean; optionally divide by the cross sectional standard deviation and clamp the result.",
+        "example": "normalize(rank(returns), useStd=true, limit=3)"
+      },
+      "quantile(x, driver = gaussian, sigma = 1.0)": {
+        "description": "Ranks and shifts a vector of Alpha values, then applies a chosen statistical distribution to reduce outliers.",
+        "example": null
+      },
+      "rank(x, rate=2)": {
+        "description": "Ranks the values of the input x among all instruments, returning numbers evenly spaced between 0.0 and 1.0.",
+        "example": "rank(ts_returns(close, 5))"
+      },
+      "scale(x, scale=1, longscale=1, shortscale=1)": {
+        "description": "Scales the input so that the sum of absolute values across all instruments equals a specified book size.",
+        "example": "scale(returns, scale=4)"
+      },
+      "scale_down(x,constant=0)": {
+        "description": "Scales all values in each day proportionately between 0 and 1 such that minimum value maps to 0 and maximum value maps to 1.",
+        "example": null
+      },
+      "vector_neut(x, y)": {
+        "description": "For given vectors x and y, it finds a new vector x* (output) such that x* is orthogonal to y",
+        "example": "vector_neut(open,close)"
+      },
+      "winsorize(x, std=4)": {
+        "description": "Winsorize limits values in a data to within a specified number of standard deviations from the mean.",
+        "example": "winsorize(ts_backfill(fn_op_lease_min_pay_due_a/enterprise_value, 63), std=4.0)"
+      },
+      "zscore(x)": {
+        "description": "Z-score is a numerical measurement that describes a value's relationship to the mean of a group of values in terms of standard deviations.",
+        "example": null
+      }
+    },
+    "Vector": {
+      "vec_avg(x)": {
+        "description": "Calculates the mean (average) of all elements in a vector field for each instrument and date.",
+        "example": "vec_avg(shrt3_bar)"
+      },
+      "vec_count(x)": {
+        "description": "Number of elements in vector field x",
+        "example": null
+      },
+      "vec_max(x)": {
+        "description": "Maximum value form vector field x",
+        "example": null
+      },
+      "vec_min(x)": {
+        "description": "Minimum value form vector field x",
+        "example": null
+      },
+      "vec_range(x)": {
+        "description": "Difference between maximum and minimum element in vector field x",
+        "example": null
+      },
+      "vec_stddev(x)": {
+        "description": "Standard Deviation of vector field x",
+        "example": null
+      },
+      "vec_sum(x)": {
+        "description": "Calculates the sum of all values in a vector field.",
+        "example": "vec_sum(scl12_alltype_buzzvec)"
+      }
+    },
+    "Transformational": {
+      "bucket(rank(x), range=...)": {
+        "description": "The bucket operator creates custom groups by dividing data into buckets (ranges) based on ranked values of any data field.",
+        "example": "bucket(rank(assets), range=\"0.1, 1, 0.1\")"
+      },
+      "trade_when(x, y, z)": {
+        "description": "The trade_when operator changes Alpha values only when a specific condition is met, keeps previous values otherwise, and can close positions by assigning NaN.",
+        "example": "trade_when(volume >= ts_mean(volume, 5), rank(-returns), -1)"
+      }
+    },
+    "Group": {
+      "group_backfill(x, group, d, std = 4.0)": {
+        "description": "Fills missing (NaN) values for instruments within the same group by calculating a winsorized mean of all non-NaN values over the past d days.",
+        "example": "group_backfill(fnd94_rt_gross_mgn_q, subindustry, 21)"
+      },
+      "group_cartesian_product(g1, g2)": {
+        "description": "Merge two groups into one group.",
+        "example": null
+      },
+      "group_max(x, group)": {
+        "description": "Maximum of x for all instruments in the same group.",
+        "example": null
+      },
+      "group_mean(x, weight, group)": {
+        "description": "Calculates the harmonic mean of a data field within each specified group.",
+        "example": "group_mean(close/eps, 1, industry)"
+      },
+      "group_min(x, group)": {
+        "description": "All elements in group equals to the min value of the group.",
+        "example": null
+      },
+      "group_neutralize(x, group)": {
+        "description": "Neutralizes Alpha values within each specified group by subtracting the group mean from each value.",
+        "example": "group_neutralize(ts_returns(close, 5), industry)"
+      },
+      "group_rank(x, group)": {
+        "description": "Ranks each element within its group based on the input field, assigning a value between 0.0 and 1.0.",
+        "example": "group_rank(close, subindustry)"
+      },
+      "group_scale(x, group)": {
+        "description": "Normalizes values within each group to a range between 0 and 1, making data comparable across different groups.",
+        "example": "group_scale(return_equity, industry)"
+      },
+      "group_zscore(x, group)": {
+        "description": "Calculates the Z-score of each value within its group, showing how far each value is from the group mean in terms of standard deviations.",
+        "example": "group_zscore(cap/income, densify(asset_group))"
+      }
+    }
+  }
+}

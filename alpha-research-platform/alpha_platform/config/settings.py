@@ -1,43 +1,22 @@
-import os
-from dataclasses import dataclass
-
-from dotenv import load_dotenv
-from sqlalchemy import URL
-
-
-load_dotenv()
-
-
-@dataclass(frozen=True)
-class Settings:
-    database_url: str
-
-
-def get_settings() -> Settings:
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        database_url = URL.create(
-            drivername="postgresql+psycopg",
-            username=os.getenv("POSTGRES_USER", "postgres"),
-            password=os.getenv("POSTGRES_PASSWORD", ""),
-            host=os.getenv("POSTGRES_HOST", "localhost"),
-            port=int(os.getenv("POSTGRES_PORT", "5432")),
-            database=os.getenv("POSTGRES_DB", "alpha_research_platform"),
-        ).render_as_string(hide_password=False)
-
-    return Settings(database_url=database_url)
 """
 Central application settings, loaded from environment variables / .env.
 Everything that varies between local dev, staging, and prod lives here —
 nowhere else in the codebase should read os.environ directly.
 """
 from functools import lru_cache
+from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[2] / ".env", env_file_encoding="utf-8", extra="ignore",
+        populate_by_name=True,
+    )
+    database_url_override: str | None = Field(default=None, validation_alias="DATABASE_URL")
 
     # --- Postgres ---
     postgres_host: str = "localhost"
@@ -48,10 +27,10 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        return (
-            f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-        )
+        return self.database_url_override or URL.create(
+            "postgresql+psycopg2", username=self.postgres_user, password=self.postgres_password,
+            host=self.postgres_host, port=self.postgres_port, database=self.postgres_db,
+        ).render_as_string(hide_password=False)
 
     # --- Qdrant ---
     qdrant_host: str = "localhost"
@@ -76,10 +55,14 @@ class Settings(BaseSettings):
 
     # --- LLM ---
     anthropic_api_key: str = ""
+    openai_api_key: str = ""
+    gemini_api_key: str = ""
+    groq_api_key: str = ""
 
     # --- App ---
     environment: str = "development"
     log_level: str = "INFO"
+    daily_simulation_budget: int = Field(default=5000, ge=1, le=5000)
 
 
 @lru_cache
