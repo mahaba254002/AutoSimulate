@@ -114,7 +114,7 @@ class APITests(unittest.TestCase):
     def test_csrf_and_offline_bootstrap(self):
         from fastapi.testclient import TestClient
         from alpha_platform.api.main import app
-        with patch("alpha_platform.api.main.campaigns.recover_interrupted"), TestClient(app) as client:
+        with patch("alpha_platform.api.main.startup_recovery"), TestClient(app) as client:
             self.assertEqual(client.get("/").status_code, 200)
             self.assertEqual(client.get("/api/bootstrap").status_code, 200)
             self.assertEqual(client.post("/api/confirm", json={"token":"no", "phrase":"RUN 1"}).status_code, 403)

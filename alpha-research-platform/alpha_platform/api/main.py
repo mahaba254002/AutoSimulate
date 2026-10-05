@@ -18,7 +18,7 @@ from alpha_platform.generation.gp.trees import DEFAULT_FIELDS
 from alpha_platform.pipeline import orchestrator
 from alpha_platform.pipeline.safety import quota_snapshot
 from alpha_platform.structure.parser import FastExprSyntaxError
-from alpha_platform.research import campaigns, catalog, providers
+from alpha_platform.research import campaigns, catalog, providers, submitted
 from alpha_platform.structure.features import extract_features
 from alpha_platform.config.operators import load_catalog
 from fastapi import Query
@@ -163,6 +163,43 @@ def stop(job_id: str):
 @app.get("/api/results")
 def results():
     return orchestrator.recent_results()
+
+
+class SubmittedSyncInput(InputModel):
+    restart: bool = False
+
+
+@app.get("/api/submitted/status")
+def submitted_status():
+    return submitted.status()
+
+
+@app.post("/api/submitted/sync")
+def submitted_sync(body: SubmittedSyncInput):
+    return submitted.queue_sync(body.restart)
+
+
+@app.post("/api/submitted/stop")
+def submitted_stop():
+    return submitted.stop()
+
+
+@app.get("/api/submitted")
+def submitted_list(search: str = Query(default="",max_length=200),
+                   region: str = Query(default="",max_length=30),delay: int | None = Query(default=None,ge=0,le=1),
+                   offset: int = Query(default=0,ge=0),limit: int = Query(default=50,ge=1,le=100)):
+    return submitted.browse(search,region,delay,offset,limit)
+
+
+@app.get("/api/submitted/export")
+def submitted_export():
+    return JSONResponse(submitted.export(),
+                        headers={"Content-Disposition":'attachment; filename="submitted-alphas.json"'})
+
+
+@app.get("/api/submitted/{alpha_id}")
+def submitted_detail(alpha_id: str):
+    return submitted.detail(alpha_id)
 
 
 app.mount("/assets", StaticFiles(directory=ASSETS), name="assets")
@@ -349,6 +386,7 @@ def inspect_expression(body: InspectInput):
 def startup_recovery():
     try:
         campaigns.recover_interrupted()
+        submitted.recover_interrupted()
     except SQLAlchemyError:
         # The app remains available to show schema/database setup errors.
         pass

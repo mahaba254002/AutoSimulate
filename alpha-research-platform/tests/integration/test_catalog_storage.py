@@ -23,7 +23,7 @@ class CatalogStorageTests(unittest.TestCase):
             config.attributes['connection']=conn
             config.attributes['version_table_schema']=self.schema
             command.upgrade(config,'head')
-            self.assertEqual(conn.execute(text(f'SELECT version_num FROM "{self.schema}".alembic_version')).scalar(),'0006')
+            self.assertEqual(conn.execute(text(f'SELECT version_num FROM "{self.schema}".alembic_version')).scalar(),'0007')
             self.assertEqual(conn.execute(text('SELECT count(*) FROM catalog_field')).scalar(),0)
 
     def test_legacy_snapshot_migration_and_downgrade_preserve_records(self):

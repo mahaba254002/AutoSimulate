@@ -15,6 +15,7 @@ A large field catalogue makes it easy to generate many expressions without under
 | Capability | Behavior |
 | --- | --- |
 | Scoped catalogue sync | Discover account-visible region, delay and universe settings; select datasets, coverage thresholds and a field limit. Interrupted downloads retain pages and respect BRAIN rate limits. |
+| Submitted alpha library | Import every account-visible submitted alpha page into a private, searchable history. Refresh, resume interrupted downloads, inspect returned scores and metrics, export JSON, or develop a saved expression further. |
 | Data Explorer | Browse scope → category → dataset → fields. Filter coverage and reported alpha count; the default count bounds are strictly greater than 5 and less than 500. Export all matching saved metadata as JSON. |
 | Manual research | Supply expressions and review their fields and supported operators before starting a campaign. No paid LLM is required. |
 | Template variants | Resolve missing fields in the chosen scope and rank compatible replacement candidates using documented metadata and coverage. Semantic equivalence still requires researcher review. |
@@ -90,6 +91,7 @@ GitHub Actions runs tests against a fresh PostgreSQL service and checks publicat
 - A local cap of up to 5,000 simulations per UTC day and selectable concurrency up to 200 do not override BRAIN's actual account limits. Start conservatively and follow reported limits.
 - Backtest thresholds are selection rules, not out-of-sample performance evidence. No scholarship, profitability, or production suitability is promised.
 - A timeout after submission can leave an uncertain remote outcome. Its reservation is retained; it is not automatically resubmitted.
+- Submitted history requires a current BRAIN session. Only numeric scores returned by BRAIN are shown; missing scores and checks remain unknown. Imported history does not use simulation quota.
 - Stopping local tracking does not cancel a remote BRAIN simulation. Production alpha submission remains a human decision.
 - The current portfolio page is a validated collection, not a combined portfolio backtest. Distributed workers, independent holdout evaluation and continuous plan refinement are future work.
 - Optional embedding modules are experimental. Install `pip install -e ".[embeddings]"` only if using them; their similarity scores do not authorize simulations.

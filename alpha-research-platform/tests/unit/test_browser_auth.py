@@ -94,7 +94,7 @@ class BrowserAuthTests(unittest.TestCase):
     def test_login_api_requires_local_token_and_never_echoes_password(self):
         from fastapi.testclient import TestClient
         from alpha_platform.api.main import app, LOCAL_TOKEN
-        with patch("alpha_platform.api.main.campaigns.recover_interrupted"), TestClient(app) as client, patch.object(auth, "login", return_value={"status":"CONNECTED"}) as login:
+        with patch("alpha_platform.api.main.startup_recovery"), TestClient(app) as client, patch.object(auth, "login", return_value={"status":"CONNECTED"}) as login:
             body={"email":"research@example.com","password":"secret-password"}
             self.assertEqual(client.post("/api/brain/login",json=body).status_code,403)
             response=client.post("/api/brain/login",json=body,headers={"X-Local-Token":LOCAL_TOKEN})

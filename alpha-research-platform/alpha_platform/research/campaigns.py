@@ -58,11 +58,14 @@ class CampaignInput(BaseModel):
     model: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_./:-]+$")
 
     parent_run_id: uuid.UUID | None = None
+    parent_submitted_alpha_id: str | None = Field(default=None,min_length=1,max_length=200)
     redevelopment_windows: list[int] = Field(default_factory=lambda: [40, 20, 60, 126], min_length=2, max_length=8)
     manual_plan: ManualPlanInput | None = None
 
     @model_validator(mode="after")
     def source_required(self):
+        if self.parent_submitted_alpha_id and (self.mode != "redevelop" or self.parent_run_id):
+            raise ValueError("Choose one submitted or local parent for redevelopment.")
         if self.mode in {"manual", "redevelop"}:
             if self.provider != "manual" or self.manual_plan is None:
                 raise ValueError("Manual research requires expressions and settings, with provider manual.")
@@ -210,6 +213,7 @@ def create_campaign(body):
         values.pop("manual_plan", None)
         values.pop("redevelopment_windows", None)
         values.pop("parent_run_id", None)
+        values.pop("parent_submitted_alpha_id", None)
         if body.mode in {"manual", "redevelop"}:
             scope = db.query(CatalogScope).filter_by(scope_id=body.manual_plan.scope_id).with_for_update().one_or_none()
             if body.manual_plan.variant_count and scope is not None and scope.status == "COMPLETE":
@@ -267,6 +271,10 @@ def create_campaign(body):
             checked_brief["manual_expressions"] = branches
             checked_brief["templates"] = [{"name":r["template"], "expression":r["expression"], "hypothesis":r["rationale"], "slots":[], "windows":[]} for r in branches]
             selected_run = db.get(SimulationRun, body.parent_run_id) if body.parent_run_id else None
+            submitted_parent = None
+            if body.parent_submitted_alpha_id:
+                from alpha_platform.research.submitted import parent_reference
+                submitted_parent = parent_reference(db,body.parent_submitted_alpha_id,analysis["parent_expression"],checked_brief["settings"])
             if body.parent_run_id:
                 if selected_run is None or selected_run.status != "COMPLETE":
                     raise ValueError("Select a completed local parent run.")
@@ -286,6 +294,8 @@ def create_campaign(body):
             analysis["parent"] = {"config_id":str(parent.config_id), "run_id":str(run.run_id) if run else None,
                                   "metrics":{k:finite_number(getattr(perf,k)) if perf else None for k in ("sharpe","fitness","turnover","self_correlation","production_correlation")},
                                   "alpha_id":run.alpha_id if run else None, "settings_match":True, "note":"Saved local baseline under the exact same settings; no parent simulation is submitted. Missing history remains unverified."}
+            if submitted_parent:
+                analysis["parent"] = {**submitted_parent,"config_id":str(parent.config_id)}
             checked_brief["redevelopment"] = analysis
             checked_brief["unknowns"] += analysis["unavailable"]
             checked_brief["settings_rationale"] = "User selected the parent market scope and settings. Baseline comparisons use exact matching simulation settings."

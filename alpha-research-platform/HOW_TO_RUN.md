@@ -114,6 +114,23 @@ running simulations finish and may produce additional qualifying candidates.
 
 ## Develop an existing alpha
 
+To retrieve alphas you have already submitted on BRAIN, sign in through **Sync
+with BRAIN**, then open **Alphas → Submitted history → Sync all submitted
+alphas**. The importer downloads every account-visible submitted page. It shows
+the actual record count and download progress; you can stop after the current
+page and resume later. A failed or interrupted refresh retains the last complete
+saved history. **Refresh all submitted alphas** updates existing records and adds
+new ones. Search, region and delay filters only narrow the table, while **Export
+saved history as JSON** exports all saved records for the current account.
+
+Use **Inspect** to view BRAIN's full returned record. **Develop alpha** copies
+the expression and settings of a supported regular alpha into a new research
+plan. Sync that alpha's catalogue scope first if it is not yet available. The
+imported in-sample metrics can serve as a reference, but the app cannot assume
+matching historical sample periods, parent correlation, or an absent score.
+Importing history starts no simulations and uses no simulation quota. A renewed
+BRAIN login may be needed if your saved session has expired.
+
 In **Research Labs → New research**, choose **Develop an existing alpha**, or use
 **Develop alpha** beside a saved simulation result. Paste the complete parent
 expression, choose its catalogue scope and simulation settings, and enter your

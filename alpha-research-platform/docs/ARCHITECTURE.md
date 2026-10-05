@@ -24,6 +24,12 @@ Catalogue JSONL checkpoints are authoritative for interrupted downloads. Progres
 
 API keys supplied through the UI remain in process memory; configured provider model identifiers may persist in PostgreSQL. BRAIN session cookies are plaintext local credentials under ignored `data/`. Passwords are not persisted by the browser-login workflow. Research source expressions and results belong to the user's private database.
 
+Submitted alpha history is account scoped in PostgreSQL. The importer stages
+each fetched page and publishes only a complete download; failed refreshes leave
+the last complete history accessible. It retains older records absent from a
+later refresh, marking them as retained history. The JSON export contains the
+full saved BRAIN payloads and should be treated as private research data.
+
 ## Failure semantics
 
 A PostgreSQL advisory lock serializes quota reservations. A saved WAITING run exists before a remote submission is attempted. An uncertain outcome retains its reservation and blocks automatic replay. Reported concurrency rejection is distinguished from daily quota exhaustion. Missing metrics and checks remain unverified, rather than silently becoming zero or passing.

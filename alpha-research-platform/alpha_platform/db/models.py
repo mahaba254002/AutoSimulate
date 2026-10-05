@@ -16,6 +16,51 @@ from sqlalchemy.orm import declarative_base, relationship, deferred
 Base = declarative_base()
 
 
+class SubmittedImport(Base):
+    __tablename__ = "submitted_import"
+    account_id = Column(Text, primary_key=True)
+    import_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    completed_import_id = Column(UUID(as_uuid=True))
+    status = Column(Text, nullable=False, default="QUEUED")
+    downloaded = Column(Integer, nullable=False, default=0)
+    total = Column(Integer)
+    error = Column(Text)
+    retry_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    cancel_requested = Column(Boolean, nullable=False, default=False)
+    restart_required = Column(Boolean, nullable=False, default=False)
+
+
+class SubmittedPage(Base):
+    __tablename__ = "submitted_page"
+    import_id = Column(UUID(as_uuid=True), primary_key=True)
+    offset = Column(Integer, primary_key=True)
+    account_id = Column(Text, ForeignKey("submitted_import.account_id", ondelete="CASCADE"), nullable=False)
+    payload = Column(JSONB, nullable=False)
+
+
+class SubmittedAlpha(Base):
+    __tablename__ = "submitted_alpha"
+    account_id = Column(Text, primary_key=True)
+    alpha_id = Column(Text, primary_key=True)
+    import_id = Column(UUID(as_uuid=True), nullable=False)
+    name = Column(Text)
+    alpha_type = Column(Text)
+    status = Column(Text)
+    expression = Column(Text)
+    region = Column(Text)
+    universe = Column(Text)
+    delay = Column(SmallInteger)
+    date_submitted = Column(DateTime(timezone=True))
+    score = Column(Numeric)
+    metrics = Column(JSONB, nullable=False)
+    search_text = Column(Text, nullable=False)
+    payload = deferred(Column(JSONB, nullable=False))
+    __table_args__ = (Index("ix_submitted_snapshot", "account_id", "import_id", "date_submitted"),
+                     Index("ix_submitted_market", "account_id", "region", "delay"),)
+
+
 class AlphaConfig(Base):
     __tablename__ = "alpha_config"
 
