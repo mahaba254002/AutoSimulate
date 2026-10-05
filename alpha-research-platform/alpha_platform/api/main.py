@@ -1,5 +1,6 @@
 """Loopback-only research dashboard. Every state-changing request needs a local token."""
 from pathlib import Path
+from datetime import date
 import secrets
 from contextlib import asynccontextmanager
 from starlette.concurrency import run_in_threadpool
@@ -187,13 +188,16 @@ def submitted_stop():
 @app.get("/api/submitted")
 def submitted_list(search: str = Query(default="",max_length=200),
                    region: str = Query(default="",max_length=30),delay: int | None = Query(default=None,ge=0,le=1),
-                   offset: int = Query(default=0,ge=0),limit: int = Query(default=50,ge=1,le=100)):
-    return submitted.browse(search,region,delay,offset,limit)
+                   offset: int = Query(default=0,ge=0),limit: int = Query(default=50,ge=1,le=100),
+                   date_from: date | None = None,date_to: date | None = None):
+    return submitted.browse(search,region,delay,offset,limit,date_from,date_to)
 
 
 @app.get("/api/submitted/export")
-def submitted_export():
-    return JSONResponse(submitted.export(),
+def submitted_export(search: str = Query(default="",max_length=200),
+                     region: str = Query(default="",max_length=30),delay: int | None = Query(default=None,ge=0,le=1),
+                     date_from: date | None = None,date_to: date | None = None):
+    return JSONResponse(submitted.export(search,region,delay,date_from,date_to),
                         headers={"Content-Disposition":'attachment; filename="submitted-alphas.json"'})
 
 

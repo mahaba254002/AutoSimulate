@@ -1,6 +1,6 @@
 """Read-only submitted-alpha imports. Staged pages never become partial snapshots."""
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 import math
 import threading
 import uuid
@@ -256,17 +256,28 @@ def run_sync(owner):
             schedule_resume(owner,retry_at)
 
 
-def browse(search="",region="",delay=None,offset=0,limit=50):
+def apply_filters(query, search="", region="", delay=None, date_from=None, date_to=None):
+    if date_from and date_to and date_from > date_to:
+        raise ValueError("The submitted date start must be on or before the end date.")
+    if search.strip():
+        query = query.filter(SubmittedAlpha.search_text.contains(search.strip().lower(),autoescape=True))
+    if region:
+        query = query.filter(SubmittedAlpha.region == region)
+    if delay is not None:
+        query = query.filter(SubmittedAlpha.delay == delay)
+    if date_from:
+        query = query.filter(SubmittedAlpha.date_submitted >= datetime.combine(date_from,time.min,timezone.utc))
+    if date_to:
+        query = query.filter(SubmittedAlpha.date_submitted <= datetime.combine(date_to,time.max,timezone.utc))
+    return query
+
+
+def browse(search="",region="",delay=None,offset=0,limit=50,date_from:date|None=None,date_to:date|None=None):
     with SessionLocal() as db:
         owner = selected_account(db)
         state = db.get(SubmittedImport, owner) if owner else None
         query = db.query(SubmittedAlpha).filter_by(account_id=owner) if owner else db.query(SubmittedAlpha).filter(False)
-        if search.strip():
-            query = query.filter(SubmittedAlpha.search_text.contains(search.strip().lower(),autoescape=True))
-        if region:
-            query = query.filter_by(region=region)
-        if delay is not None:
-            query = query.filter_by(delay=delay)
+        query = apply_filters(query,search,region,delay,date_from,date_to)
         count = query.count()
         query = query.order_by(SubmittedAlpha.date_submitted.desc().nullslast(),SubmittedAlpha.alpha_id).offset(offset)
         rows = query.limit(limit).all() if limit is not None else query.all()
@@ -293,11 +304,15 @@ def detail(alpha_id, db=None):
     return row.payload
 
 
-def export():
+def export(search="",region="",delay=None,date_from:date|None=None,date_to:date|None=None):
     with SessionLocal() as db:
         owner = selected_account(db)
-        payloads = [r[0] for r in db.query(SubmittedAlpha.payload).filter_by(account_id=owner).order_by(SubmittedAlpha.alpha_id)] if owner else []
-        return {"source":"saved_submitted_alpha_history","count":len(payloads),"alphas":payloads}
+        query = db.query(SubmittedAlpha.payload).filter_by(account_id=owner) if owner else db.query(SubmittedAlpha.payload).filter(False)
+        query = apply_filters(query,search,region,delay,date_from,date_to)
+        payloads = [r[0] for r in query.order_by(SubmittedAlpha.date_submitted.desc().nullslast(),SubmittedAlpha.alpha_id)]
+        return {"source":"saved_submitted_alpha_history","filters":{"search":search,"region":region,"delay":delay,
+                "date_from":date_from.isoformat() if date_from else None,"date_to":date_to.isoformat() if date_to else None},
+                "count":len(payloads),"alphas":payloads}
 
 
 def parent_reference(db, alpha_id, expression, chosen_settings):

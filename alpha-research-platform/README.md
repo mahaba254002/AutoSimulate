@@ -15,7 +15,7 @@ A large field catalogue makes it easy to generate many expressions without under
 | Capability | Behavior |
 | --- | --- |
 | Scoped catalogue sync | Discover account-visible region, delay and universe settings; select datasets, coverage thresholds and a field limit. Interrupted downloads retain pages and respect BRAIN rate limits. |
-| Submitted alpha library | Import every account-visible submitted alpha page into a private, searchable history. Refresh, resume interrupted downloads, inspect returned scores and metrics, export JSON, or develop a saved expression further. |
+| Submitted alpha library | Import every account-visible submitted alpha page into a private, searchable history. Refresh, resume interrupted downloads, filter by submission date, export all matching records, or develop a saved expression further. |
 | Data Explorer | Browse scope → category → dataset → fields. Filter coverage and reported alpha count; the default count bounds are strictly greater than 5 and less than 500. Export all matching saved metadata as JSON. |
 | Manual research | Supply expressions and review their fields and supported operators before starting a campaign. No paid LLM is required. |
 | Template variants | Resolve missing fields in the chosen scope and rank compatible replacement candidates using documented metadata and coverage. Semantic equivalence still requires researcher review. |

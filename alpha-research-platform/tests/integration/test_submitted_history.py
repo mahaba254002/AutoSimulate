@@ -1,4 +1,4 @@
-from datetime import datetime,timezone,timedelta
+from datetime import date,datetime,timezone,timedelta
 import unittest
 import uuid
 from unittest.mock import MagicMock,patch
@@ -62,6 +62,28 @@ class SubmittedHistoryTests(unittest.TestCase):
             self.assertEqual(submitted.status()['saved'],1)
             self.assertEqual(submitted.browse()['results'][0]['id'],'alpha1')
             with self.assertRaises(ValueError):submitted.detail('alphadraft')
+
+    def test_export_uses_every_browse_filter_across_all_saved_records(self):
+        self.seed()
+        first=record(1)
+        first['dateSubmitted']='2025-06-01T23:59:59Z'
+        earlier=record(2)
+        earlier['dateSubmitted']='2025-05-31T23:59:59Z'
+        other_region=record(3)
+        other_region['settings']['region']='EUR'
+        other_delay=record(4)
+        other_delay['settings']['delay']=0
+        self.execute([{'count':4,'results':[first,earlier,other_region,other_delay]}])
+        with patch.object(submitted,'SessionLocal',self.sessions):
+            kwargs={'search':'alpha','region':'USA','delay':1,'date_from':date(2025,6,1),'date_to':date(2025,6,1)}
+            listing=submitted.browse(**kwargs)
+            exported=submitted.export(**kwargs)
+            self.assertEqual(listing['count'],1)
+            self.assertEqual(exported['count'],1)
+            self.assertEqual([a['id'] for a in exported['alphas']],['alpha1'])
+            self.assertEqual(exported['filters']['date_to'],'2025-06-01')
+            self.assertEqual(submitted.export()['count'],4)
+            with self.assertRaises(ValueError):submitted.export(date_from=date(2025,6,2),date_to=date(2025,6,1))
 
     def test_interrupted_pages_resume_and_previous_history_stays_published(self):
         identity=self.seed(previous=True)

@@ -120,8 +120,10 @@ alphas**. The importer downloads every account-visible submitted page. It shows
 the actual record count and download progress; you can stop after the current
 page and resume later. A failed or interrupted refresh retains the last complete
 saved history. **Refresh all submitted alphas** updates existing records and adds
-new ones. Search, region and delay filters only narrow the table, while **Export
-saved history as JSON** exports all saved records for the current account.
+new ones. Search, region, delay and submitted-date filters apply to both the
+table and **Export matching alphas as JSON**, across all saved pages. Clear the
+filters to export every saved alpha for the current account. Submitted-date
+bounds use UTC calendar dates, including the full end date.
 
 Use **Inspect** to view BRAIN's full returned record. **Develop alpha** copies
 the expression and settings of a supported regular alpha into a new research
