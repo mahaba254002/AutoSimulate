@@ -12,6 +12,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python: ['3.11', '3.12']
     services:
@@ -45,7 +46,7 @@ jobs:
       - name: Check publication hygiene
         run: python scripts/audit_publication.py
       - name: Unit tests
-        run: python -m unittest discover -s tests/unit -v
+        run: python scripts/ci_tests.py
       - name: Fresh database migration
         run: python -m alembic upgrade head
       - name: Disposable-schema integration tests
