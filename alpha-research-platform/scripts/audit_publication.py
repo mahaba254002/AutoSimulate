@@ -44,7 +44,7 @@ def main():
     args = parser.parse_args()
     try:
         root = Path(git("rev-parse", "--show-toplevel").decode().strip())
-        files = git("ls-files", "-z").decode().split("\0")
+        files = git("-C", str(root), "ls-files", "--full-name", "-z").decode().split("\0")
         problems = []
         for name in filter(None, files):
             for finding in inspect_content(name, (root / name).read_bytes()):
@@ -53,7 +53,7 @@ def main():
             # Inspect committed blobs without checking out or modifying any version.
             seen = set()
             for commit in git("rev-list", "--all").decode().splitlines():
-                for entry in git("ls-tree", "-r", "-z", commit).split(b"\0"):
+                for entry in git("ls-tree", "--full-tree", "-r", "-z", commit).split(b"\0"):
                     if not entry:
                         continue
                     meta, raw_name = entry.split(b"\t", 1)
