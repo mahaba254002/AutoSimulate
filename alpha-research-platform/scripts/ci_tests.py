@@ -2,11 +2,13 @@
 import os
 import sys
 import unittest
+from pathlib import Path
 
 from audit_publication import PATTERNS
 
 
 def main():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     suite = unittest.defaultTestLoader.discover("tests/unit")
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if os.environ.get("GITHUB_ACTIONS") == "true":
