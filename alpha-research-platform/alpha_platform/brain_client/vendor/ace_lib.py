@@ -1209,7 +1209,7 @@ def _check_rate_limit(response: requests.Response) -> None:
         logger.debug(f"Status code: {response.status_code}, sleep 1 sec")
         time.sleep(1)
     if parsed["remaining_minute"] <= 1:
-        logger.info(f"Rate limit {parsed["limit_minute"]} reached (per minute). Sleeping for a minute...")
+        logger.info(f"Rate limit {parsed['limit_minute']} reached (per minute). Sleeping for a minute...")
         time.sleep(60)
 
 
